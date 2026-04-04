@@ -1,0 +1,98 @@
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#1a1a2e;--card:#16213e;--accent:#e94560;--accent2:#0f3460;--text:#eee;--muted:#8892a4;--green:#4ecca3;--yellow:#f0c040;--input-bg:#0f3460;--radius:12px}
+body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px;-webkit-tap-highlight-color:transparent}
+.page{display:none;padding:16px;max-width:480px;margin:0 auto}
+.page.active{display:block}
+h1{font-size:1.4rem;margin-bottom:4px}
+h2{font-size:1.1rem;color:var(--accent);margin:16px 0 8px}
+h3{font-size:.95rem;color:var(--muted);margin:12px 0 6px}
+.subtitle{color:var(--muted);font-size:.85rem;margin-bottom:16px}
+
+/* Cards */
+.card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.card-header{display:flex;justify-content:space-between;align-items:center}
+.card-title{font-weight:600;font-size:1rem}
+.badge{font-size:.75rem;padding:3px 8px;border-radius:20px;font-weight:600}
+.badge-green{background:var(--green);color:#111}
+.badge-yellow{background:var(--yellow);color:#111}
+.badge-muted{background:#333;color:var(--muted)}
+
+/* Stats row */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.stat{background:var(--card);border-radius:var(--radius);padding:12px;text-align:center}
+.stat-value{font-size:1.5rem;font-weight:700;color:var(--green)}
+.stat-label{font-size:.7rem;color:var(--muted);margin-top:2px}
+
+/* Today card */
+.today-card{background:linear-gradient(135deg,var(--accent2),#1a1a4e);border-radius:var(--radius);padding:20px;margin-bottom:16px;cursor:pointer;position:relative;overflow:hidden}
+.today-card::after{content:'→';position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:1.5rem;color:var(--accent)}
+.today-label{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.today-title{font-size:1.3rem;font-weight:700;margin:4px 0}
+.today-desc{font-size:.85rem;color:var(--muted)}
+
+/* Exercise list */
+.exercise{background:var(--card);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.exercise-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer}
+.exercise-name{font-weight:600;font-size:.95rem;flex:1}
+.exercise-target{font-size:.8rem;color:var(--muted);margin-left:8px;white-space:nowrap}
+.exercise-check{width:28px;height:28px;border-radius:50%;border:2px solid var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:10px;transition:.2s}
+.exercise-check.done{border-color:var(--green);background:var(--green);color:#111}
+.exercise-body{padding:0 16px 14px;display:none}
+.exercise-body.open{display:block}
+.exercise-desc{font-size:.82rem;color:var(--muted);line-height:1.5;margin-bottom:12px;padding:10px;background:rgba(255,255,255,.04);border-radius:8px;display:none}
+.exercise-desc.show{display:block}
+.desc-toggle{font-size:.78rem;color:var(--accent);cursor:pointer;margin-bottom:10px;display:inline-block}
+.input-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.input-group{display:flex;flex-direction:column;gap:2px}
+.input-group label{font-size:.7rem;color:var(--muted)}
+.input-group input,.input-group select,.input-group textarea{background:var(--input-bg);border:1px solid #2a3a5e;color:var(--text);border-radius:8px;padding:8px 10px;font-size:.9rem;width:100%}
+.input-group textarea{min-height:60px;resize:vertical}
+input[type=number]{width:70px}
+.x-label{color:var(--muted);font-size:1rem;padding-top:18px}
+
+/* Section header */
+.section-header{display:flex;align-items:center;gap:8px;margin:20px 0 10px}
+.section-icon{font-size:1.2rem}
+.section-title{font-size:.9rem;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.5px}
+
+/* Bottom nav */
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid #2a3a5e;display:flex;justify-content:space-around;padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:100}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:var(--muted);font-size:.65rem;padding:4px 12px;cursor:pointer}
+.nav-btn.active{color:var(--accent)}
+.nav-btn svg{width:24px;height:24px}
+
+/* Progress bars */
+.progress-bar{height:6px;background:#2a3a5e;border-radius:3px;overflow:hidden;margin:6px 0}
+.progress-fill{height:100%;background:var(--green);border-radius:3px;transition:width .3s}
+
+/* Share */
+.btn{display:block;width:100%;padding:14px;border:none;border-radius:var(--radius);font-size:1rem;font-weight:600;cursor:pointer;margin-bottom:10px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-secondary{background:var(--accent2);color:#fff}
+
+/* Schedule grid */
+.schedule{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:12px 0}
+.schedule-day{text-align:center;padding:8px 2px;border-radius:8px;font-size:.75rem}
+.schedule-day.today{background:var(--accent);color:#fff;font-weight:700}
+.schedule-day.done{background:var(--green);color:#111}
+.schedule-day .day-label{font-weight:600;margin-bottom:2px}
+.schedule-day .day-type{font-size:.65rem;color:var(--muted)}
+.schedule-day.today .day-type,.schedule-day.done .day-type{color:inherit}
+
+/* Reminders card */
+.reminders{font-size:.82rem;color:var(--muted);line-height:1.6}
+.reminders li{margin-bottom:4px}
+
+/* Week selector */
+.week-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px}
+.week-nav button{background:var(--accent2);border:none;color:var(--text);width:36px;height:36px;border-radius:50%;font-size:1.1rem;cursor:pointer}
+.week-label{font-size:.9rem;font-weight:600}
+
+/* History */
+.history-entry{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:8px}
+.history-date{font-size:.8rem;color:var(--muted)}
+.history-summary{font-size:.9rem;margin-top:4px}
+
+/* Toast */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--green);color:#111;padding:10px 20px;border-radius:20px;font-size:.85rem;font-weight:600;z-index:200;opacity:0;transition:opacity .3s}
+.toast.show{opacity:1}
