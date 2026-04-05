@@ -4,6 +4,33 @@ let workoutDate = todayStr();
 
 const app = document.getElementById('app');
 
+// Parse target string into default values for inputs
+function parseTarget(target, inputs) {
+  const defaults = {};
+  const keys = inputs.map(i => i.key);
+  // "3×6" or "2×12" or "3×15s" → sets × reps/secs
+  let m = target.match(/(\d+)\s*[×x]\s*(\d+)/);
+  if (m) {
+    if (keys.includes('sets')) defaults.sets = m[1];
+    if (keys.includes('reps')) defaults.reps = m[2];
+    if (keys.includes('secs')) defaults.secs = m[2];
+  }
+  // "3 rds 90s/90s" → rounds, work, rest
+  m = target.match(/(\d+)\s*rds?\s+(\d+)s\s*\/\s*(\d+)s/);
+  if (m) {
+    if (keys.includes('rounds')) defaults.rounds = m[1];
+    if (keys.includes('work')) defaults.work = m[2];
+    if (keys.includes('rest')) defaults.rest = m[3];
+  }
+  // "10+ min" → mins
+  m = target.match(/(\d+)\+?\s*min/);
+  if (m && keys.includes('mins')) defaults.mins = m[1];
+  // "10 min" or "optional" with a Done/Yes select
+  if (keys.includes('done') && !defaults.done) defaults.done = inputs.find(i=>i.key==='done')?.options?.[0] || 'Yes';
+  if (keys.includes('attended')) defaults.attended = 'Yes';
+  return defaults;
+}
+
 // Icons as inline SVG
 const ICONS = {
   home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1V10"/></svg>',
@@ -69,10 +96,11 @@ function renderHome() {
   h += `<h1>🗡️ HEMA Tracker</h1><p class="subtitle">Week ${week} · ${formatDate(today)}</p>`;
 
   // Stats
-  h += `<div class="stats">
-    <div class="stat"><div class="stat-value">${stats.daysLogged}</div><div class="stat-label">Days This Week</div></div>
-    <div class="stat"><div class="stat-value">${stats.avgCompletion}%</div><div class="stat-label">Avg Completion</div></div>
-    <div class="stat"><div class="stat-value">${stats.backPainDays}</div><div class="stat-label">Back Pain Days</div></div>
+  h += `<div class="stats" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat"><div class="stat-value">${stats.daysLogged}</div><div class="stat-label">Days Logged</div></div>
+    <div class="stat"><div class="stat-value">${stats.avgCompletion}%</div><div class="stat-label">Avg Complete</div></div>
+    <div class="stat"><div class="stat-value">${stats.backPainDays}</div><div class="stat-label">Back Pain</div></div>
+    <div class="stat"><div class="stat-value">${stats.neckSoreDays}</div><div class="stat-label">Neck Sore</div></div>
   </div>`;
 
   // Today's workout card
@@ -121,22 +149,52 @@ function renderHome() {
 function renderWorkout() {
   const date = workoutDate;
   const type = getDayType(date);
-  const data = EXERCISES[type];
-  if (!data) return `<div class="page active"><h1>No data for this day type</h1></div>`;
-
   const meta = DB.loadMeta(date) || {};
   let h = `<div class="page active">`;
-  h += `<h1>Day ${type}</h1><p class="subtitle">${formatDate(date)} · ${DAY_LABELS[type]}</p>`;
 
-  // Sections
+  // Sunday: toggle between class (prehab) and no-class (full Day A)
+  if (type === 'S') {
+    const attended = meta.attendedClass || '';
+    h += `<h1>Sunday</h1><p class="subtitle">${formatDate(date)} · Class Day</p>`;
+    h += `<div class="card"><div class="card-title">Did you attend class?</div>
+      <div class="input-row" style="margin-top:8px">
+        <button class="btn ${attended==='Yes'?'btn-primary':'btn-secondary'}" style="flex:1" data-attend="Yes">✅ Yes — Class</button>
+        <button class="btn ${attended==='No'?'btn-primary':'btn-secondary'}" style="flex:1" data-attend="No">❌ No — Do Day A</button>
+      </div></div>`;
+    if (attended === 'No') {
+      h += renderExerciseList(EXERCISES['A'], date, meta);
+      h += renderMetaBlock(meta, 'A', date);
+      h += `</div>`;
+      return h;
+    }
+    if (attended === 'Yes') {
+      h += renderExerciseList(EXERCISES['S'], date, meta);
+      h += renderMetaBlock(meta, 'S', date);
+      h += `</div>`;
+      return h;
+    }
+    // No selection yet
+    h += `</div>`;
+    return h;
+  }
+
+  const data = EXERCISES[type];
+  if (!data) return `<div class="page active"><h1>No data for this day type</h1></div>`;
+  h += `<h1>Day ${type}</h1><p class="subtitle">${formatDate(date)} · ${DAY_LABELS[type]}</p>`;
+  h += renderExerciseList(data, date, meta);
+  h += renderMetaBlock(meta, type, date);
+  h += `</div>`;
+  return h;
+}
+
+function renderExerciseList(data, date, meta) {
+  let h = '';
   let exIdx = 0;
   for (const sec of data.sections) {
     h += `<div class="section-header"><span class="section-icon">${sec.icon}</span><span class="section-title">${sec.title}</span></div>`;
-
     for (const ex of data.exercises.filter(e => e.section === sec.id)) {
       const saved = DB.load(date, exIdx) || {};
       const hasData = Object.values(saved).some(v => v !== '' && v !== null && v !== undefined);
-
       h += `<div class="exercise" data-idx="${exIdx}">`;
       h += `<div class="exercise-header">
         <span class="exercise-name">${ex.name}</span>
@@ -162,18 +220,26 @@ function renderWorkout() {
       exIdx++;
     }
   }
+  return h;
+}
 
-  // Session meta
-  h += `<h2>Session Notes</h2><div class="card">`;
+function renderMetaBlock(meta, type, date) {
+  let h = `<h2>Session Notes</h2><div class="card">`;
   h += `<div class="input-row">
-    <div class="input-group"><label>Energy (1-5)</label><input type="number" min="1" max="5" data-meta="energy" value="${meta.energy||''}"></div>
-    <div class="input-group"><label>Back Pain?</label><select data-meta="backPain"><option value="">—</option><option ${meta.backPain==='Yes'?'selected':''}>Yes</option><option ${meta.backPain==='No'?'selected':''}>No</option></select></div>`;
-  if (type === 'A') {
+    <div class="input-group"><label>Energy Before (1-5)</label><input type="number" min="1" max="5" data-meta="energyBefore" value="${meta.energyBefore||''}"></div>
+    <div class="input-group"><label>Energy After (1-5)</label><input type="number" min="1" max="5" data-meta="energyAfter" value="${meta.energyAfter||''}"></div>`;
+  if (type === 'A' || type === 'S') {
     h += `<div class="input-group"><label>Grip Strong?</label><select data-meta="gripStrong"><option value="">—</option><option ${meta.gripStrong==='Yes'?'selected':''}>Yes</option><option ${meta.gripStrong==='No'?'selected':''}>No</option></select></div>`;
+  }
+  h += `</div><div class="input-row">
+    <div class="input-group"><label>Back Pain?</label><select data-meta="backPain"><option value="">—</option><option ${meta.backPain==='Yes'?'selected':''}>Yes</option><option ${meta.backPain==='No'?'selected':''}>No</option></select></div>
+    <div class="input-group"><label>Neck Soreness?</label><select data-meta="neckSore"><option value="">—</option><option ${meta.neckSore==='Yes'?'selected':''}>Yes</option><option ${meta.neckSore==='No'?'selected':''}>No</option></select></div>`;
+  if (type === 'C') {
+    h += `<div class="input-group"><label>Soreness (1-5)</label><input type="number" min="1" max="5" data-meta="soreness" value="${meta.soreness||''}"></div>`;
   }
   h += `</div>`;
   h += `<div class="input-group" style="margin-top:8px"><label>Notes</label><textarea data-meta="notes">${meta.notes||''}</textarea></div>`;
-  h += `</div></div>`;
+  h += `</div>`;
   return h;
 }
 
@@ -195,7 +261,7 @@ function renderHistory() {
         </div>
         <span class="badge ${pct>=80?'badge-green':pct>0?'badge-yellow':'badge-muted'}">${pct}%</span>
       </div>
-      ${meta.energy ? `<div style="font-size:.8rem;color:var(--muted);margin-top:4px">Energy: ${meta.energy}/5${meta.backPain==='Yes'?' · Back pain':''}${meta.notes?' · '+meta.notes.slice(0,50):''}</div>` : ''}
+      ${meta.energyBefore ? `<div style="font-size:.8rem;color:var(--muted);margin-top:4px">Energy: ${meta.energyBefore}→${meta.energyAfter||'?'}${meta.backPain==='Yes'?' · Back pain':''}${meta.neckSore==='Yes'?' · Neck sore':''}${meta.notes?' · '+meta.notes.slice(0,50):''}</div>` : ''}
     </div>`;
   }
   h += `</div>`;
@@ -237,6 +303,44 @@ function bindEvents() {
   // Schedule day clicks
   document.querySelectorAll('[data-workout-date]').forEach(el => {
     el.addEventListener('click', () => navigate('workout', el.dataset.workoutDate));
+  });
+
+  // Attend class toggle (Sunday)
+  document.querySelectorAll('[data-attend]').forEach(el => {
+    el.addEventListener('click', () => {
+      const meta = DB.loadMeta(workoutDate) || {};
+      meta.attendedClass = el.dataset.attend;
+      DB.saveMeta(workoutDate, meta);
+      render();
+    });
+  });
+
+  // Quick-complete circle tap
+  document.querySelectorAll('.exercise-check').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const exercise = el.closest('.exercise');
+      const idx = parseInt(exercise.dataset.idx);
+      const date = workoutDate;
+      const type = getDayType(date);
+      const meta = DB.loadMeta(date) || {};
+      const exList = (type === 'S' && meta.attendedClass === 'No') ? EXERCISES['A'].exercises : EXERCISES[type].exercises;
+      const ex = exList[idx];
+      if (!ex) return;
+      const saved = DB.load(date, idx) || {};
+      const hasData = Object.values(saved).some(v => v !== '' && v !== null && v !== undefined);
+      if (hasData) {
+        // Clear all fields
+        DB.save(date, idx, {});
+        render();
+        return;
+      }
+      const defaults = parseTarget(ex.target, ex.inputs);
+      for (const [k, v] of Object.entries(defaults)) saved[k] = v;
+      DB.save(date, idx, saved);
+      render();
+      toast('✓ ' + ex.name);
+    });
   });
 
   // Exercise accordion

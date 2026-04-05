@@ -42,7 +42,15 @@ function formatDate(d) {
 
 function getCompletionForDate(date) {
   const type = getDayType(date);
-  const exs = EXERCISES[type]?.exercises || [];
+  let exs;
+  if (type === 'S') {
+    const meta = DB.loadMeta(date);
+    if (meta?.attendedClass === 'No') exs = EXERCISES['A']?.exercises || [];
+    else if (meta?.attendedClass === 'Yes') exs = EXERCISES['S']?.exercises || [];
+    else return 0;
+  } else {
+    exs = EXERCISES[type]?.exercises || [];
+  }
   let done = 0, total = exs.length;
   for (let i = 0; i < exs.length; i++) {
     const saved = DB.load(date, i);
@@ -52,7 +60,7 @@ function getCompletionForDate(date) {
 }
 
 function getWeekStats(weekStart) {
-  let totalPct = 0, days = 0, backPainDays = 0, totalDays = 0;
+  let totalPct = 0, days = 0, backPainDays = 0, neckSoreDays = 0, totalDays = 0;
   for (let i = 0; i < 7; i++) {
     const d = addDays(weekStart, i);
     if (d > todayStr()) break;
@@ -61,8 +69,9 @@ function getWeekStats(weekStart) {
     if (pct > 0) { totalPct += pct; days++; }
     const meta = DB.loadMeta(d);
     if (meta?.backPain === 'Yes') backPainDays++;
+    if (meta?.neckSore === 'Yes') neckSoreDays++;
   }
-  return { avgCompletion: days ? Math.round(totalPct / days) : 0, daysLogged: days, totalDays, backPainDays };
+  return { avgCompletion: days ? Math.round(totalPct / days) : 0, daysLogged: days, totalDays, backPainDays, neckSoreDays };
 }
 
 function getProgramWeek() {
@@ -83,7 +92,7 @@ function generateSummary() {
   const prevWs = addDays(ws, -7);
   for (const w of [prevWs, ws]) {
     const stats = getWeekStats(w);
-    lines.push(`Week of ${formatDate(w)}: ${stats.daysLogged}/${stats.totalDays} days logged, ${stats.avgCompletion}% avg completion, ${stats.backPainDays} back pain days`);
+    lines.push(`Week of ${formatDate(w)}: ${stats.daysLogged}/${stats.totalDays} days logged, ${stats.avgCompletion}% avg completion, ${stats.backPainDays} back pain days, ${stats.neckSoreDays} neck sore days`);
   }
   lines.push('');
 
