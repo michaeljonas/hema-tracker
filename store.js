@@ -24,7 +24,7 @@ const DB = {
   }
 };
 
-function dateStr(d) { return d.toISOString().split('T')[0]; }
+function dateStr(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function todayStr() { return dateStr(new Date()); }
 function getDayOfWeek(d) { return (new Date(d + 'T12:00:00').getDay() + 6) % 7; } // 0=Mon
 function getDayType(d) { return SCHEDULE[getDayOfWeek(d)]; }

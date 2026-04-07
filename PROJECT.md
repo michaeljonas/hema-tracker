@@ -39,10 +39,16 @@ All files in `~/Documents/hema/app/`:
 - **No backend/server** — all data in localStorage on the client's phone
 - **No framework** — vanilla JS, single-page app with manual routing
 - **Exercises expand on tap** — shows input fields (sets, reps, seconds, weight)
+- **Quick-complete circles** — tap the checkmark circle to auto-fill recommended values from the target string; tap again to clear (undo)
 - **"How to do this" toggle** — expandable description with form cues for each exercise
 - **Auto-save** — every input change writes to localStorage immediately
+- **Sunday attend toggle** — "Yes" shows prehab exercises with individual tracking + class log; "No" shows full Day A workout
 - **Share page** — generates human-readable progress summary, exports JSON or CSV via iOS share sheet
 - **Date strings use `T12:00:00` suffix** — prevents timezone bugs where UTC midnight shifts the day backward in western timezones
+- **Workout renderer uses helper functions** — `renderExerciseList()` and `renderMetaBlock()` are reused for normal days and Sunday's conditional Day A rendering
+- **Dead bugs replace McGill curl-up** — neck strain protection, tracked per-side (L/R)
+- **Energy tracked as before/after** — two fields instead of one, to measure session drain
+- **Neck soreness tracking** — added to all session notes and home page weekly stats
 
 ## Hosting
 Hosted on GitHub Pages. Client opens the link in Safari → Share → Add to Home Screen. Works offline after first load.
@@ -71,4 +77,4 @@ All in `~/Documents/hema/`:
 
 ## Session History
 - **April 4, 2026:** Initial build. Created full PWA with 4 pages (home, workout, history, share). Fixed timezone bug where `new Date('YYYY-MM-DD')` parsed as UTC and showed wrong day in Pacific time. Deployed to GitHub Pages.
-- **April 5, 2026:** v9 program update. Replaced McGill curl-up with dead bugs (neck strain from Day 1). Reduced all starting volumes across every day type. Energy tracking changed from single number to before/after. Added neck soreness tracking to all session notes and home page stats. Foam rolling made optional on Day C. Sword intervals reduced to 3 rounds. Service worker updated to v2 with cache purge for auto-update. All "work up to" targets added to exercise descriptions.
+- **April 5, 2026:** v9 program update. Replaced McGill curl-up with dead bugs (neck strain from Day 1). Reduced all starting volumes across every day type. Energy tracking changed from single number to before/after. Added neck soreness tracking to all session notes and home page stats. Foam rolling made optional on Day C. Sword intervals reduced to 3 rounds. Service worker updated to v2 with cache purge for auto-update. All "work up to" targets added to exercise descriptions. Refactored workout renderer into `renderExerciseList()` and `renderMetaBlock()` helpers. Sunday (Day S) now shows attend/no-attend toggle — "Yes" renders prehab exercises with individual tracking, "No" renders full Day A workout. Added quick-complete: tapping the circle checkmark auto-fills recommended sets/reps/seconds from the target string (parsed via `parseTarget()`). Tapping again clears the data (undo accidental taps). Grip strong field now shows for both Day A and Sunday.
